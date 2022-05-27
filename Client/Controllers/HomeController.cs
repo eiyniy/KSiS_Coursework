@@ -17,7 +17,7 @@ namespace Client.Controllers
         public IActionResult Index()
         {
             ClientModel.Connect(11000);
-            ViewBag.msg = ClientModel.SendMessageFromSocket("HELLLLLOOOOOO");
+            ViewBag.msg = ClientModel.SendMessageToServer("HELLLLLOOOOOO");
             ClientModel.Disconnect();
             return View();
         }

@@ -13,46 +13,68 @@ namespace Client.Models
 
         public static void Connect(int port)
         {
-            IPHostEntry ipHost = Dns.GetHostEntry("localhost");
-            IPAddress ipAddr = ipHost.AddressList[0];
-            IPEndPoint ipEndPoint = new IPEndPoint(ipAddr, port);
+            try
+            {
+                IPHostEntry ipHost = Dns.GetHostEntry("localhost");
+                IPAddress ipAddr = ipHost.AddressList[0];
+                IPEndPoint ipEndPoint = new IPEndPoint(ipAddr, port);
 
-            _sender = new Socket(ipAddr.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
+                _sender = new Socket(ipAddr.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
 
-            // Соединяем сокет с удаленной точкой
-            _sender.Connect(ipEndPoint);
+                // Соединяем сокет с удаленной точкой
+                _sender.Connect(ipEndPoint);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.ToString());
+            }
         }
 
-        public static string SendMessageFromSocket(string message)
+        public static string SendMessageToServer(string message)
         {
-            Console.WriteLine($"Сокет соединяется с {_sender.RemoteEndPoint.ToString()} ");
-            byte[] msg = Encoding.UTF8.GetBytes(message);
-
-            // Отправляем данные через сокет
-            int bytesSent = _sender.Send(msg);
-            Console.WriteLine($"Сообщение доставлено");
-
-            // Получаем ответ от сервера
-            int bytesRec = _sender.Receive(_bytes);
-            string answer = Encoding.UTF8.GetString(_bytes, 0, bytesRec);
-
-            Console.WriteLine("\nОтвет от сервера: {0}\n\n", answer);
-
-            if (message.IndexOf("--exit") > -1)
+            try
             {
-                Console.WriteLine("Клиент завершил соединение с сервером.");
-                Disconnect();
-                return "DISCONNECTED";
+                Console.WriteLine($"Сокет соединяется с {_sender.RemoteEndPoint.ToString()} ");
+                byte[] msg = Encoding.UTF8.GetBytes(message);
+
+                // Отправляем данные через сокет
+                int bytesSent = _sender.Send(msg);
+                Console.WriteLine($"Сообщение доставлено");
+
+                // Получаем ответ от сервера
+                int bytesRec = _sender.Receive(_bytes);
+                string answer = Encoding.UTF8.GetString(_bytes, 0, bytesRec);
+
+                Console.WriteLine("\nОтвет от сервера: {0}\n\n", answer);
+
+                if (message.IndexOf("--exit") > -1)
+                {
+                    Console.WriteLine("Клиент завершил соединение с сервером.");
+                    Disconnect();
+                    return "DISCONNECTED";
+                }
+                else
+                    return answer;
             }
-            else
-                return answer;
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.ToString());
+                return "ERROR";
+            }
         }
 
         public static void Disconnect()
         {
-            // Освобождаем сокет
-            _sender.Shutdown(SocketShutdown.Both);
-            _sender.Close();
+            try
+            {
+                // Освобождаем сокет
+                _sender.Shutdown(SocketShutdown.Both);
+                _sender.Close();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.ToString());
+            }
         }
     }
 }
