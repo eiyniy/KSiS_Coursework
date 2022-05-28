@@ -7,11 +7,15 @@
             "type": "process",
             "args": [
                 "build",
-                "${workspaceFolder}/Client/client.csproj",
+                "${workspaceFolder}/Server/Server.csproj",
                 "/property:GenerateFullPaths=true",
                 "/consoleloggerparameters:NoSummary"
             ],
-            "problemMatcher": "$msCompile"
+            "problemMatcher": "$msCompile",
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            }
         },
         {
             "label": "publish",
@@ -19,7 +23,7 @@
             "type": "process",
             "args": [
                 "publish",
-                "${workspaceFolder}/Client/client.csproj",
+                "${workspaceFolder}/Server/Server.csproj",
                 "/property:GenerateFullPaths=true",
                 "/consoleloggerparameters:NoSummary"
             ],
@@ -33,7 +37,7 @@
                 "watch",
                 "run",
                 "--project",
-                "${workspaceFolder}/Client/client.csproj"
+                "${workspaceFolder}/Server/Server.csproj"
             ],
             "problemMatcher": "$msCompile"
         }

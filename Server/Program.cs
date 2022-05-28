@@ -4,6 +4,7 @@ namespace Server
     {
         public static void Main(string[] args)
         {
+            ServerModel.SetDebugMode(true);
             ServerModel.Start("localhost", 11000);
         }
     }

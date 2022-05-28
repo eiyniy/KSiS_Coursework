@@ -3,11 +3,16 @@ using System.Text;
 using System.Net;
 using System.Net.Sockets;
 using System.Collections.Concurrent;
+using System.Text.RegularExpressions;
 
 namespace Server
 {
     public static class ServerModel
     {
+        private const string _swkGUID = "258EAFA5-E914-47DA-95CA-C5AB0DC85B11";
+
+        private static bool _isDebug = false;
+
         private static Socket _sListener;
 
         private static ConcurrentQueue<Socket> clientsHandlers = new ConcurrentQueue<Socket>();
@@ -30,8 +35,7 @@ namespace Server
             }
             catch (Exception ex)
             {
-                Console.WriteLine(ex.ToString());
-                return;
+                ShowError(ex);
             }
             finally
             {
@@ -40,16 +44,27 @@ namespace Server
             }
         }
 
+        public static void SendMessage(Socket handler, string message)
+        {
+            ShowDebug(message, "SENT");
+            handler.Send(EncodeReply(Encoding.UTF8.GetBytes(message)));
+        }
+
+        public static void SetDebugMode(bool isDebug) => _isDebug = isDebug;
+
         private static void AcceptNewClients(IPEndPoint ipEndPoint)
         {
             try
             {
                 while (true)
                 {
-                    Console.WriteLine("L: Ожидаем соединение через порт {0}", ipEndPoint);
+                    if (_isDebug)
+                        ShowDebug($"Waiting for a connection through {ipEndPoint}");
 
                     Socket handler = _sListener.Accept();
-                    Console.WriteLine("L: Handler created");
+
+                    if (_isDebug)
+                        ShowDebug("Handler created");
 
                     clientsHandlers.Enqueue(handler);
 
@@ -58,7 +73,7 @@ namespace Server
             }
             catch (Exception ex)
             {
-                Console.WriteLine(ex.ToString());
+                ShowError(ex);
                 return;
             }
         }
@@ -67,30 +82,35 @@ namespace Server
         {
             try
             {
-                Console.WriteLine("P1: Processing started");
+                if (_isDebug)
+                    ShowDebug("Processing started");
 
                 while (true)
                 {
-                    byte[] clientBinRequest = new byte[1024];
-                    int bytesRec = handler.Receive(clientBinRequest);
+                    byte[] requestBin = new byte[1024];
+                    int requestByteCount = handler.Receive(requestBin);
 
-                    string clientRequest = Encoding.UTF8.GetString(clientBinRequest, 0, bytesRec);
+                    string request = Encoding.UTF8.GetString(requestBin, 0, requestByteCount);
 
-                    if (clientRequest.IndexOf("--exit") > -1)
-                        throw new Exception("P1: Сервер завершил соединение с клиентом.");
+                    if (Regex.IsMatch(request, "^GET", RegexOptions.IgnoreCase))
+                    {
+                        HandshakingWithClient(handler, request);
+                        continue;
+                    }
 
-                    // Показываем данные на консоли
-                    Console.Write("P1: Полученный текст: " + clientRequest + "\n\n");
+                    string text = DecodeRequest(requestBin);
+                    if (text != string.Empty)
+                        Console.WriteLine($"RECIEVED: {text}");
 
-                    // Отправляем ответ клиенту
-                    string reply = $"P1: Спасибо за запрос в {clientRequest.Length} символов";
-                    byte[] msg = Encoding.UTF8.GetBytes(reply);
-                    handler.Send(msg);
+                    SendMessage(handler, "Hello Client!");
+
+                    if (!IsSocketConnected(handler))
+                        throw new Exception("Client has been disconnected");
                 }
             }
             catch (Exception ex)
             {
-                Console.WriteLine(ex.ToString());
+                ShowError(ex);
                 CloseClient(handler);
                 return;
             }
@@ -106,13 +126,124 @@ namespace Server
 
                 handler.Shutdown(SocketShutdown.Both);
                 handler.Close();
-                Console.WriteLine("L: Handler closed");
+
+                if (_isDebug)
+                    ShowDebug("Handler closed");
             }
             catch (Exception ex)
             {
-                Console.WriteLine(ex.ToString());
+                ShowError(ex);
                 return;
             }
         }
+
+        // 1. Obtain the value of the "Sec-WebSocket-Key" request header without any leading or trailing whitespace
+        // 2. Concatenate it with "258EAFA5-E914-47DA-95CA-C5AB0DC85B11" (a special GUID specified by RFC 6455)
+        // 3. Compute SHA-1 and Base64 hash of the new value
+        // 4. Write the hash back as the value of "Sec-WebSocket-Accept" response header in an HTTP response
+        private static void HandshakingWithClient(Socket handler, string clientHandshake)
+        {
+            if (_isDebug)
+                ShowDebug($"Handshaking from client\n{clientHandshake}");
+
+            string swk = Regex.Match(clientHandshake, "Sec-WebSocket-Key: (.*)").Groups[1].Value.Trim();
+            string swka = swk + _swkGUID;
+            byte[] swkaSha1 = System.Security.Cryptography.SHA1.Create().ComputeHash(Encoding.UTF8.GetBytes(swka));
+            string swkaSha1Base64 = Convert.ToBase64String(swkaSha1);
+
+            // HTTP/1.1 defines the sequence CR LF as the end-of-line marker
+            string responseString =
+                $"HTTP/1.1 101 Switching Protocols\r\nConnection: Upgrade\r\nUpgrade: websocket\r\nSec-WebSocket-Accept: {swkaSha1Base64}\r\n\r\n";
+            byte[] response = Encoding.UTF8.GetBytes(responseString);
+
+            if (_isDebug)
+                ShowDebug($"Handshaking from server\n{responseString}");
+
+            handler.Send(response);
+        }
+
+        private static byte[] EncodeReply(byte[] bytesRaw)
+        {
+            int newLength = bytesRaw.Length;
+            if (bytesRaw.Length <= 125)
+                newLength += 2;
+            else if (bytesRaw.Length >= 126 && bytesRaw.Length <= 65535)
+                newLength += 4;
+            else
+                newLength += 10;
+
+            byte[] bytesFormatted = new byte[newLength];
+
+            bytesFormatted[0] = 129;
+
+            int offset = 0; // it doesn't matter what value is set here - it will be set now:
+
+            if (bytesRaw.Length <= 125)
+            {
+                bytesFormatted[1] = (byte)bytesRaw.Length;
+
+                offset = 2;
+            }
+            else if (bytesRaw.Length >= 126 && bytesRaw.Length <= 65535)
+            {
+                bytesFormatted[1] = 126;
+                bytesFormatted[2] = (byte)((bytesRaw.Length >> 8) & 255);
+                bytesFormatted[3] = (byte)((bytesRaw.Length) & 255);
+
+                offset = 4;
+            }
+
+            // put raw data at the correct index
+            Buffer.BlockCopy(bytesRaw, 0, bytesFormatted, offset, bytesRaw.Length);
+
+            return bytesFormatted;
+        }
+
+        private static string DecodeRequest(byte[] requestBin)
+        {
+            //bool fin = (requestBin[0] & 0b10000000) != 0;
+            bool mask = (requestBin[1] & 0b10000000) != 0; // must be true, "All messages from the client to the server have this bit set"
+            //int opcode = requestBin[0] & 0b00001111; // expecting 1 - text message
+            ulong offset = 2;
+            ulong msglen = (ulong)(requestBin[1] & 0b01111111);
+
+            if (msglen == 126)
+            {
+                // bytes are reversed because websocket will print them in Big-Endian, whereas
+                // BitConverter will want them arranged in little-endian on windows
+                msglen = BitConverter.ToUInt16(new byte[] { requestBin[3], requestBin[2] }, 0);
+                offset = 4;
+            }
+
+            if (mask)
+            {
+                byte[] decoded = new byte[msglen];
+                byte[] masks = new byte[4]
+                {
+                    requestBin[offset],
+                    requestBin[offset + 1],
+                    requestBin[offset + 2],
+                    requestBin[offset + 3]
+                };
+                offset += 4;
+
+                for (ulong i = 0; i < msglen; ++i)
+                    decoded[i] = (byte)(requestBin[offset + i] ^ masks[i % 4]);
+
+                return Encoding.UTF8.GetString(decoded);
+            }
+            else
+            {
+                ShowDebug("Bad request: mask bit not set");
+                return string.Empty;
+            }
+        }
+
+        private static bool IsSocketConnected(Socket s) => !(s.Poll(1000, SelectMode.SelectRead) && s.Available == 0);
+
+        private static void ShowError(Exception ex) => Console.WriteLine($"\nEXCEPTION: {ex.ToString()}\n");
+
+        private static void ShowDebug(string s, string owner = null) =>
+            Console.WriteLine(owner == null ? $"\nDEBUG: {s}\n" : $"\nDEBUG: {owner}: {s}\n");
     }
 }
