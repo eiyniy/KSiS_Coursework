@@ -58,13 +58,11 @@ namespace Server
             {
                 while (true)
                 {
-                    if (_isDebug)
-                        ShowDebug($"Waiting for a connection through {ipEndPoint}");
+                    ShowDebug($"Waiting for a connection through {ipEndPoint}");
 
                     Socket handler = _sListener.Accept();
 
-                    if (_isDebug)
-                        ShowDebug("Handler created");
+                    ShowDebug("Handler created");
 
                     clientsHandlers.Enqueue(handler);
 
@@ -82,8 +80,7 @@ namespace Server
         {
             try
             {
-                if (_isDebug)
-                    ShowDebug("Processing started");
+                ShowDebug("Processing started");
 
                 while (true)
                 {
@@ -127,8 +124,7 @@ namespace Server
                 handler.Shutdown(SocketShutdown.Both);
                 handler.Close();
 
-                if (_isDebug)
-                    ShowDebug("Handler closed");
+                ShowDebug("Handler closed");
             }
             catch (Exception ex)
             {
@@ -143,8 +139,7 @@ namespace Server
         // 4. Write the hash back as the value of "Sec-WebSocket-Accept" response header in an HTTP response
         private static void HandshakingWithClient(Socket handler, string clientHandshake)
         {
-            if (_isDebug)
-                ShowDebug($"Handshaking from client\n{clientHandshake}");
+            ShowDebug($"Handshaking from client\n{clientHandshake}");
 
             string swk = Regex.Match(clientHandshake, "Sec-WebSocket-Key: (.*)").Groups[1].Value.Trim();
             string swka = swk + _swkGUID;
@@ -156,8 +151,7 @@ namespace Server
                 $"HTTP/1.1 101 Switching Protocols\r\nConnection: Upgrade\r\nUpgrade: websocket\r\nSec-WebSocket-Accept: {swkaSha1Base64}\r\n\r\n";
             byte[] response = Encoding.UTF8.GetBytes(responseString);
 
-            if (_isDebug)
-                ShowDebug($"Handshaking from server\n{responseString}");
+            ShowDebug($"Handshaking from server\n{responseString}");
 
             handler.Send(response);
         }
@@ -243,7 +237,10 @@ namespace Server
 
         private static void ShowError(Exception ex) => Console.WriteLine($"\nEXCEPTION: {ex.ToString()}\n");
 
-        private static void ShowDebug(string s, string owner = null) =>
-            Console.WriteLine(owner == null ? $"\nDEBUG: {s}\n" : $"\nDEBUG: {owner}: {s}\n");
+        private static void ShowDebug(string s, string owner = null)
+        {
+            if (_isDebug)
+                Console.WriteLine(owner == null ? $"\nDEBUG: {s}\n" : $"\nDEBUG: {owner}: {s}\n");
+        }
     }
 }
