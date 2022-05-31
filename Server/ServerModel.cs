@@ -1,9 +1,10 @@
-﻿// SocketServer.cs
-using System.Text;
+﻿using System.Text;
 using System.Net;
 using System.Net.Sockets;
 using System.Collections.Concurrent;
 using System.Text.RegularExpressions;
+using Server.Messaging;
+using System.Text.Json;
 
 namespace Server
 {
@@ -13,7 +14,7 @@ namespace Server
 
         private static bool _isDebug = false;
 
-        private static Socket _sListener;
+        private static Socket? _sListener;
 
         private static ConcurrentQueue<Socket> clientsHandlers = new ConcurrentQueue<Socket>();
 
@@ -44,11 +45,7 @@ namespace Server
             }
         }
 
-        public static void SendMessage(Socket handler, string message)
-        {
-            ShowDebug(message, "SENT");
-            handler.Send(EncodeReply(Encoding.UTF8.GetBytes(message)));
-        }
+        public static void SendMessage(Socket handler, Message message) => handler.Send(EncodeReply(message.ToByteArray()));
 
         public static void SetDebugMode(bool isDebug) => _isDebug = isDebug;
 
@@ -99,7 +96,9 @@ namespace Server
                     if (text != string.Empty)
                         Console.WriteLine($"RECIEVED: {text}");
 
-                    SendMessage(handler, "Hello Client!");
+                    var t = JsonSerializer.Deserialize(text, typeof(ConnectionMessage));
+
+                    //SendMessage(handler, "Hello Client!");
 
                     if (!IsSocketConnected(handler))
                         throw new Exception("Client has been disconnected");
@@ -237,7 +236,7 @@ namespace Server
 
         private static void ShowError(Exception ex) => Console.WriteLine($"\nEXCEPTION: {ex.ToString()}\n");
 
-        private static void ShowDebug(string s, string owner = null)
+        private static void ShowDebug(string s, string? owner = null)
         {
             if (_isDebug)
                 Console.WriteLine(owner == null ? $"\nDEBUG: {s}\n" : $"\nDEBUG: {owner}: {s}\n");
