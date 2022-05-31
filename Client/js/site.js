@@ -21,7 +21,6 @@ ws.onclose = function (event) {
 
 ws.onmessage = function (event) {
     alert("Получены данные " + event.data);
-
     JSON.parse();
 };
 

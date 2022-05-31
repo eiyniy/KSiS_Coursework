@@ -44,35 +44,45 @@ namespace Server
             {
                 foreach (var handler in _clientsHandlers)
                     CloseClient(handler);
+
             }
         }
 
-        public static void SendMessage(Socket handler, Message message) => handler.Send(EncodeReply(message.ToByteArray()));
+        public static void SendAll(Message message)
+        {
+            foreach (var handler in _clientsHandlers)
+                SendMessage(handler, message);
+        }
+
+        private static void SendMessage(Socket handler, Message message) => handler.Send(EncodeReply(Encoding.UTF8.GetBytes(JsonSerializer.Serialize(message))));
 
         public static void SetDebugMode(bool isDebug) => _isDebug = isDebug;
 
         private static void AcceptNewClients(IPEndPoint ipEndPoint)
         {
-            try
+            Task.Run(() =>
             {
-                while (true)
+                try
                 {
-                    ShowDebug($"Waiting for a connection through {ipEndPoint}");
+                    while (true)
+                    {
+                        ShowDebug($"Waiting for a connection through {ipEndPoint}");
 
-                    Socket handler = _sListener.Accept();
+                        Socket handler = _sListener.Accept();
 
-                    ShowDebug("Handler created");
+                        ShowDebug("Handler created");
 
-                    clientsHandlers.Enqueue(handler);
+                        _clientsHandlers.Enqueue(handler);
 
-                    Task.Run(() => ProcessClientRequests(handler));
+                        Task.Run(() => ProcessClientRequests(handler));
+                    }
                 }
-            }
-            catch (Exception ex)
-            {
-                ShowError(ex);
-                return;
-            }
+                catch (Exception ex)
+                {
+                    ShowError(ex);
+                    return;
+                }
+            });
         }
 
         private static void ProcessClientRequests(Socket handler)
@@ -204,7 +214,7 @@ namespace Server
         {
             //bool fin = (requestBin[0] & 0b10000000) != 0;
             bool mask = (requestBin[1] & 0b10000000) != 0; // must be true, "All messages from the client to the server have this bit set"
-            //int opcode = requestBin[0] & 0b00001111; // expecting 1 - text message
+                                                           //int opcode = requestBin[0] & 0b00001111; // expecting 1 - text message
             ulong offset = 2;
             ulong msglen = (ulong)(requestBin[1] & 0b01111111);
 
