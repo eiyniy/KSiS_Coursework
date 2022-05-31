@@ -1,21 +1,14 @@
 
-export class ConnectionMessage {
-    messageColor;
-    name;
-    isDrawer;
+class ConnectionMessage {
+    MessageType;
+    Username;
+    UserID;
 
 
-    FromJSON(message)
+    constructor(username, userID)
     {
-        let data = JSON.parse(message);
-        return data;
-    }
-
-
-    constructor(messageColor, name, isDrawer)
-    {
-        this.messageColor = messageColor;
-        this.name = name;
-        this.isDrawer = isDrawer;
+        this.MessageType = 0;
+        this.Username = username;
+        this.UserID = userID;
     }
 }

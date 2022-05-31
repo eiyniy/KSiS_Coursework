@@ -1,24 +1,23 @@
 using System.Text;
 using System.Drawing;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace Server.Messaging;
 
 public class ConnectionMessage : Message
 {
-    private Guid _userID;
-    private string _username;
-    private Color _userColor;
-    private DateTime _time;
+    public int UserID { get; set; }
+    public string Username { get; set; }
+    public DateTime Time { get; set; }
 
 
-    public ConnectionMessage(Guid userID, string username, Color userColor)
+    public ConnectionMessage(int userID, string username)
         : base(MessageTypes.Connect)
     {
-        _userID = userID;
-        _username = username;
-        _userColor = userColor;
-        _time = DateTime.Now;
+        UserID = userID;
+        Username = username;
+        Time = DateTime.Now;
     }
 
 

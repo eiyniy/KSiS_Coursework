@@ -16,7 +16,9 @@ namespace Server
 
         private static Socket? _sListener;
 
-        private static ConcurrentQueue<Socket> clientsHandlers = new ConcurrentQueue<Socket>();
+        private static ConcurrentQueue<Socket> _clientsHandlers = new ConcurrentQueue<Socket>();
+
+        private static ConcurrentQueue<User> _users = new ConcurrentQueue<User>();
 
 
         public static void Start(string dns, int port)
@@ -40,7 +42,7 @@ namespace Server
             }
             finally
             {
-                foreach (var handler in clientsHandlers)
+                foreach (var handler in _clientsHandlers)
                     CloseClient(handler);
             }
         }
@@ -96,9 +98,15 @@ namespace Server
                     if (text != string.Empty)
                         Console.WriteLine($"RECIEVED: {text}");
 
-                    var t = JsonSerializer.Deserialize(text, typeof(ConnectionMessage));
+                    switch (text[15])
+                    {
+                        case '0':
+                            var cMessage = (ConnectionMessage?)JsonSerializer.Deserialize(text, typeof(ConnectionMessage));
 
-                    //SendMessage(handler, "Hello Client!");
+                            _users.Enqueue(new User(cMessage?.Username, false));
+
+                            break;
+                    }
 
                     if (!IsSocketConnected(handler))
                         throw new Exception("Client has been disconnected");
