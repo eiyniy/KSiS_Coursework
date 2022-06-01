@@ -21,6 +21,8 @@ namespace Server.Messaging
             PositionX = positionX;
             PositionY = positionY;
         }
+
+        
         public override byte[] ToByteArray() =>
             Encoding.UTF8.GetBytes(JsonSerializer.Serialize(this));
     }

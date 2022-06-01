@@ -123,6 +123,9 @@ namespace Server
                                 var reply = (ConnectionMessage?)JsonSerializer.Deserialize(text, typeof(ConnectionMessage));
                                 reply.UserID = id;
                                 SendMessage(user.Socket, reply);
+
+                                if (user.UserId == id)
+                                    SendMessage(user.Socket, new CreateMapMessage());
                             }                            
 
                             break;

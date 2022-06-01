@@ -1,50 +1,40 @@
-// namespace Server
-// {
-//     public static class Map
-//     {
-//         public static string[] Map;
+namespace Server;
+public static class Map
+{
+    public enum CellTypes { SolidBlock, SoftBlock, Empty }
 
-//         public static int Width = 19;
+    private const int Width = 18;
 
-//         public static int Height = 11;
+    private const int Height = 10;
 
-//         static Map()
-//         {
-            
-//         }
+    public static CellTypes[,] MapTemplate = new CellTypes[Height, Width];
 
-//         private static string[] GenerateMap()
-//         {
-//             var cells = '';
-//             for (var row = 0; row < Width; row++)
-//             {
 
-//             }
-                
+    public static void GenerateMap()
+    {
+        Random random = new Random();
 
-//             return Map;
-//         }
-//     }
-// }
+        for (var row = 0; row < Width; row++)
+        {
+            for (var col = 0; col < Height; col++)
+            {
+                MapTemplate[row, col] = CellTypes.Empty;
 
-// // function generateLevel() {
-// //     // на старте пока уровень пустой
-// //     cells = [];
+                if (col == 0 || row == 0 || row == Height || col == Height)
+                {
+                    MapTemplate[row, col] = CellTypes.SolidBlock;
+                    continue;
+                }
 
-// //     // cначала считаем строки
-// //     for (let row = 0; row < numRows; row++) {
-// //         cells[row] = [];
+                if (row % 2 == 0 && col % 2 == 0)
+                {
+                    MapTemplate[row, col] = CellTypes.SolidBlock;
+                    continue;
+                }
 
-// //         // потом столбцы
-// //         for (let col = 0; col < numCols; col++) {
-
-// //             // с вероятностью 90% в этой ячейке будет кирпичная стена
-// //             if (!template[row][col] && Math.random() < 0.70) {
-// //                 cells[row][col] = types.softWall;
-// //             }
-// //             else if (template[row][col] === types.wall) {
-// //                 cells[row][col] = types.wall;
-// //             }
-// //         }
-// //     }
-// // }
+                if (random.Next(1, 100) < 70)
+                    MapTemplate[row, col] = CellTypes.SoftBlock;
+            }
+        }
+    }
+}

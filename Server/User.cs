@@ -6,22 +6,9 @@ public class User
 {
     private bool _isInit;
 
-    //private int? _userId;
-
-
     public static int CommonId = 0;
 
     public int UserId { get; set; }
-    // {
-    //     get
-    //     {
-    //         if (_userId == null)
-    //             _userId = GetNewId();
-
-    //         return _userId ?? -1;
-    //     }
-    //     set => _userId = value;
-    // }
 
     public string Username { get; set; }
 

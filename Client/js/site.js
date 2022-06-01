@@ -4,6 +4,7 @@ const host = 'localhost';
 
 let username = "Petr";
 let userID = -1;
+let templateMap;
 
 let ws = new WebSocket("ws://" + host + ':' + port)
 
@@ -13,27 +14,16 @@ ws.onopen = function () {
     ws.send(JSON.stringify(new ConnectionMessage(username, userID)));
 };
 
-// ws.onclose = function (event) {
-//     if (event.wasClean) {
-//         alert('Соединение закрыто чисто');
-//     } else {
-//         alert('Обрыв соединения');
-//     }
-//     alert('Код: ' + event.code + ' причина: ' + event.reason);
-
-//     ws.send(JSON.stringify(new DisconnectionMessage(username, userID)));
-// };
-
 ws.onmessage = function (event) {
     alert("Получены данные " + event.data);
 
     let messageRaw = JSON.parse(event.data);
-
+    
     switch (messageRaw.MessageType) {
         case 0:
             let cMessage = new ConnectionMessage(messageRaw.Username, messageRaw.UserID);
 
-            //  не работает с >1 неинициализированным юзером 
+            //  не работает с >1 неинициализированным юзером (или нет) 
             if (userID == -1)
                 userID = cMessage.UserID;
 
@@ -44,6 +34,13 @@ ws.onmessage = function (event) {
 
             break;
 
+        case 2:
+            break;
+
+        case 3:
+            templateMap = messageRaw;
+            alert(templateMap);
+            
         default:
             break;
     }
@@ -57,3 +54,14 @@ window.onunload = function () {
     ws.send(JSON.stringify(new DisconnectionMessage(username, userID)));
     ws.close();
 }
+
+// ws.onclose = function (event) {
+//     if (event.wasClean) {
+//         alert('Соединение закрыто чисто');
+//     } else {
+//         alert('Обрыв соединения');
+//     }
+//     alert('Код: ' + event.code + ' причина: ' + event.reason);
+
+//     ws.send(JSON.stringify(new DisconnectionMessage(username, userID)));
+// };
