@@ -16,9 +16,9 @@ namespace Server
 
         private static Socket? _sListener;
 
-        private static ConcurrentQueue<Socket> _clientsHandlers = new ConcurrentQueue<Socket>();
+        //private static ConcurrentQueue<Socket> _clientsHandlers = new ConcurrentQueue<Socket>();
 
-        private static ConcurrentQueue<User> _users = new ConcurrentQueue<User>();
+        private static ConcurrentDictionary<int, User> _users = new ConcurrentDictionary<int, User>();
 
 
         public static void Start(string dns, int port)
@@ -42,7 +42,7 @@ namespace Server
             }
             finally
             {
-                foreach (var handler in _clientsHandlers)
+                foreach (var handler in _users.Select(u => u.Value.Socket))
                     CloseClient(handler);
 
             }
@@ -50,7 +50,7 @@ namespace Server
 
         public static void SendAll(Message message)
         {
-            foreach (var handler in _clientsHandlers)
+            foreach (var handler in _users.Select(u => u.Value.Socket))
                 SendMessage(handler, message);
         }
 
@@ -73,7 +73,10 @@ namespace Server
 
                         ShowDebug("Handler created");
 
-                        _clientsHandlers.Enqueue(handler);
+                        //_clientsHandlers.Enqueue(handler);
+
+                        var id = User.GetNewId();
+                        _users.TryAdd(id, new User(handler, id));
 
                         Task.Run(() => ProcessClientRequests(handler));
                     }
@@ -112,13 +115,26 @@ namespace Server
                     switch (text[15])
                     {
                         case '0':
-                            foreach (var client in _clientsHandlers)
+                            int id = _users.Where(u => u.Value.Socket == handler)
+                                .First().Value.UserId;
+
+                            foreach (var user in _users.Select(u => u.Value))
                             {
-                                if (client == handler)
-                                    continue;
-                                
-                                SendMessage(client, (ConnectionMessage?)JsonSerializer.Deserialize(text, typeof(ConnectionMessage)));
+                                var reply = (ConnectionMessage?)JsonSerializer.Deserialize(text, typeof(ConnectionMessage));
+                                reply.UserID = id;
+                                SendMessage(user.Socket, reply);
                             }                            
+
+                            break;
+                        
+                        case '1':
+                            foreach (var user in _users.Select(u => u.Value))
+                            {
+                                if (user.Socket != handler)
+                                    SendMessage(user.Socket, (DisconnectionMessage?)JsonSerializer.Deserialize(text, typeof(DisconnectionMessage)));
+                                else 
+                                    _users.TryRemove(user.UserId, out var _);
+                            }
 
                             break;
                     }
