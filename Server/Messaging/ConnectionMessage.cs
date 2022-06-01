@@ -20,6 +20,6 @@ public class ConnectionMessage : Message
         Time = DateTime.Now;
     }
 
-
-    public override byte[] ToByteArray() => Encoding.UTF8.GetBytes(JsonSerializer.Serialize(this));
+    public override byte[] ToByteArray() => 
+        Encoding.UTF8.GetBytes(JsonSerializer.Serialize(this));
 }

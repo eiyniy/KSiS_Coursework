@@ -54,7 +54,8 @@ namespace Server
                 SendMessage(handler, message);
         }
 
-        private static void SendMessage(Socket handler, Message message) => handler.Send(EncodeReply(Encoding.UTF8.GetBytes(JsonSerializer.Serialize(message))));
+        private static void SendMessage(Socket handler, Message message) => 
+            handler.Send(EncodeReply(message.ToByteArray()));
 
         public static void SetDebugMode(bool isDebug) => _isDebug = isDebug;
 
@@ -111,9 +112,13 @@ namespace Server
                     switch (text[15])
                     {
                         case '0':
-                            var cMessage = (ConnectionMessage?)JsonSerializer.Deserialize(text, typeof(ConnectionMessage));
-
-                            _users.Enqueue(new User(cMessage?.Username, false));
+                            foreach (var client in _clientsHandlers)
+                            {
+                                if (client == handler)
+                                    continue;
+                                
+                                SendMessage(client, (ConnectionMessage?)JsonSerializer.Deserialize(text, typeof(ConnectionMessage)));
+                            }                            
 
                             break;
                     }
@@ -173,7 +178,7 @@ namespace Server
             handler.Send(response);
         }
 
-        private static byte[] EncodeReply(byte[] bytesRaw)
+        public static byte[] EncodeReply(byte[] bytesRaw)
         {
             int newLength = bytesRaw.Length;
             if (bytesRaw.Length <= 125)
@@ -210,7 +215,7 @@ namespace Server
             return bytesFormatted;
         }
 
-        private static string DecodeRequest(byte[] requestBin)
+        public static string DecodeRequest(byte[] requestBin)
         {
             //bool fin = (requestBin[0] & 0b10000000) != 0;
             bool mask = (requestBin[1] & 0b10000000) != 0; // must be true, "All messages from the client to the server have this bit set"

@@ -20,8 +20,18 @@ ws.onclose = function (event) {
 };
 
 ws.onmessage = function (event) {
-    alert("Получены данные " + event.data);
-    JSON.parse();
+    let messageRaw = JSON.parse(event.data);
+
+    switch (messageRaw.MessageType) {
+        case 0:
+            let message = new ConnectionMessage(messageRaw.Username, messageRaw.UserID);
+            alert("1" + message.MessageType + "2" + message.UserID + "3" + message.Username + "\n" + "Получены данные " + event.data);
+
+            break;
+    
+        default:
+            break;
+    }
 };
 
 ws.onerror = function (error) {

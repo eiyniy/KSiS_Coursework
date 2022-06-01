@@ -1,4 +1,7 @@
-﻿namespace Server.Messaging;
+﻿using System.Text;
+using System.Text.Json;
+
+namespace Server.Messaging;
 
 public enum MessageTypes { Connect, Disconnect, Draw, Regular };
 
