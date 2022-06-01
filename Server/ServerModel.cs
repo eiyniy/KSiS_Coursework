@@ -130,7 +130,7 @@ namespace Server
                         case '1':
                             foreach (var user in _users.Select(u => u.Value))
                             {
-                                if (user.Socket != handler)
+                                if (!user.Socket.Equals(handler))
                                     SendMessage(user.Socket, (DisconnectionMessage?)JsonSerializer.Deserialize(text, typeof(DisconnectionMessage)));
                                 else 
                                     _users.TryRemove(user.UserId, out var _);

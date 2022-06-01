@@ -13,32 +13,37 @@ ws.onopen = function () {
     ws.send(JSON.stringify(new ConnectionMessage(username, userID)));
 };
 
-ws.onclose = function (event) {
-    if (event.wasClean) {
-        alert('Соединение закрыто чисто');
-    } else {
-        alert('Обрыв соединения');
-    }
-    alert('Код: ' + event.code + ' причина: ' + event.reason);
+// ws.onclose = function (event) {
+//     if (event.wasClean) {
+//         alert('Соединение закрыто чисто');
+//     } else {
+//         alert('Обрыв соединения');
+//     }
+//     alert('Код: ' + event.code + ' причина: ' + event.reason);
 
-    let message = new DisconnectionMessage(username, userID);
-};
+//     ws.send(JSON.stringify(new DisconnectionMessage(username, userID)));
+// };
 
 ws.onmessage = function (event) {
+    alert("Получены данные " + event.data);
+
     let messageRaw = JSON.parse(event.data);
 
     switch (messageRaw.MessageType) {
         case 0:
-            let message = new ConnectionMessage(messageRaw.Username, messageRaw.UserID);
+            let cMessage = new ConnectionMessage(messageRaw.Username, messageRaw.UserID);
 
             //  не работает с >1 неинициализированным юзером 
             if (userID == -1)
-                userID = message.UserID;
-
-            alert("1" + message.MessageType + "2" + message.UserID + "3" + message.Username + "\n" + "Получены данные " + event.data);
+                userID = cMessage.UserID;
 
             break;
-    
+
+        case 1:
+            let dMessage = new DisconnectionMessage(messageRaw.Username, messageRaw.UserID);
+
+            break;
+
         default:
             break;
     }
@@ -47,3 +52,8 @@ ws.onmessage = function (event) {
 ws.onerror = function (error) {
     alert("Ошибка " + error.message);
 };
+
+window.onunload = function () {
+    ws.send(JSON.stringify(new DisconnectionMessage(username, userID)));
+    ws.close();
+}
