@@ -18,7 +18,7 @@ ws.onmessage = function (event) {
     alert("Получены данные " + event.data);
 
     let messageRaw = JSON.parse(event.data);
-    
+
     switch (messageRaw.MessageType) {
         case 0:
             let cMessage = new ConnectionMessage(messageRaw.Username, messageRaw.UserID);
@@ -39,8 +39,8 @@ ws.onmessage = function (event) {
 
         case 3:
             templateMap = messageRaw;
-            alert(templateMap);
-            
+            //alert(templateMap.SoftBlockX + " " + templateMap.SoftBlockY);
+
         default:
             break;
     }

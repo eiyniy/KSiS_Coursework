@@ -1,3 +1,5 @@
+using System.Drawing;
+
 namespace Server;
 public static class Map
 {
@@ -9,14 +11,16 @@ public static class Map
 
     public static CellTypes[,] MapTemplate = new CellTypes[Height, Width];
 
+    public static List<Point> SoftBlocks = new List<Point>();
+
 
     public static void GenerateMap()
     {
         Random random = new Random();
 
-        for (var row = 0; row < Width; row++)
+        for (var row = 0; row < Height; row++)
         {
-            for (var col = 0; col < Height; col++)
+            for (var col = 0; col < Width; col++)
             {
                 MapTemplate[row, col] = CellTypes.Empty;
 
@@ -33,7 +37,10 @@ public static class Map
                 }
 
                 if (random.Next(1, 100) < 70)
+                {
                     MapTemplate[row, col] = CellTypes.SoftBlock;
+                    SoftBlocks.Add(new Point(row, col));
+                }
             }
         }
     }

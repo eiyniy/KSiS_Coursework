@@ -54,7 +54,7 @@ namespace Server
                 SendMessage(handler, message);
         }
 
-        private static void SendMessage(Socket handler, Message message) => 
+        private static void SendMessage(Socket handler, Message message) =>
             handler.Send(EncodeReply(message.ToByteArray()));
 
         public static void SetDebugMode(bool isDebug) => _isDebug = isDebug;
@@ -125,17 +125,23 @@ namespace Server
                                 SendMessage(user.Socket, reply);
 
                                 if (user.UserId == id)
-                                    SendMessage(user.Socket, new CreateMapMessage());
-                            }                            
+                                {
+                                    foreach (var block in Map.SoftBlocks)
+                                    {
+                                        var message = new ModifyBlockMessage(block);
+                                        SendMessage(user.Socket, message);
+                                    }
+                                }
+                            }
 
                             break;
-                        
+
                         case '1':
                             foreach (var user in _users.Select(u => u.Value))
                             {
                                 if (!user.Socket.Equals(handler))
                                     SendMessage(user.Socket, (DisconnectionMessage?)JsonSerializer.Deserialize(text, typeof(DisconnectionMessage)));
-                                else 
+                                else
                                     _users.TryRemove(user.UserId, out var _);
                             }
 

@@ -6,6 +6,8 @@ public class Program
 {
     public static void Main(string[] args)
     {
+        Map.GenerateMap();
+        
         ServerModel.SetDebugMode(true);
         ServerModel.Start("localhost", 11000);
 
