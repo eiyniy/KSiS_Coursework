@@ -24,3 +24,27 @@ class DisconnectionMessage {
         this.UserID = userID;
     }
 }
+
+class RegularMessage {
+    MessageType;
+    Text;
+    UserID;
+
+
+    constructor(userID, text) {
+        this.MessageType = 2;
+        this.Text = text;
+        this.UserID = userID;
+    }
+}
+
+class DrawMessage {
+    MessageType;
+    Colors;
+
+
+    constructor(colors) {
+        this.MessageType = 3;
+        this.Colors = colors;
+    }
+}

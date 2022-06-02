@@ -6,30 +6,12 @@ public class User
 {
     private bool _isInit;
 
-    //private int? _userId;
-
-
-    public static int CommonId = 0;
+    private static int _commonId = 0;
+    
 
     public int UserId { get; set; }
-    // {
-    //     get
-    //     {
-    //         if (_userId == null)
-    //             _userId = GetNewId();
-
-    //         return _userId ?? -1;
-    //     }
-    //     set => _userId = value;
-    // }
 
     public string Username { get; set; }
-
-    public int[] Position { get; set; }
-
-    public int BombCount { get; set; } = 1;
-
-    public double BombTimer { get; set; }
 
     public Socket Socket { get; set; }
 
@@ -52,5 +34,5 @@ public class User
     }
 
 
-    public static int GetNewId() => ++CommonId;
+    public static int GetNewId() => ++_commonId;
 }

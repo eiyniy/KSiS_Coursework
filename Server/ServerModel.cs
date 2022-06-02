@@ -5,6 +5,7 @@ using System.Collections.Concurrent;
 using System.Text.RegularExpressions;
 using Server.Messaging;
 using System.Text.Json;
+using System.Drawing;
 
 namespace Server
 {
@@ -12,11 +13,17 @@ namespace Server
     {
         private const string _swkGUID = "258EAFA5-E914-47DA-95CA-C5AB0DC85B11";
 
+        private static readonly Dictionary<int, Action<User, string>> _processingMethodsTable =
+            new Dictionary<int, Action<User, string>>
+        {
+            {0, ProcessConnectionMessage},
+            {1, ProcessDisonnectionMessage},
+            {2, ProcessRegularMessage},
+        };
+
         private static bool _isDebug = false;
 
         private static Socket? _sListener;
-
-        //private static ConcurrentQueue<Socket> _clientsHandlers = new ConcurrentQueue<Socket>();
 
         private static ConcurrentDictionary<int, User> _users = new ConcurrentDictionary<int, User>();
 
@@ -35,6 +42,10 @@ namespace Server
                 _sListener.Listen(10);
 
                 AcceptNewClients(ipEndPoint);
+
+                var callback = new TimerCallback(UpdateCanvas);
+                Timers.Add(callback, null, 0, 10000);
+                Timers.Start();
             }
             catch (Exception ex)
             {
@@ -44,18 +55,25 @@ namespace Server
             {
                 foreach (var handler in _users.Select(u => u.Value.Socket))
                     CloseClient(handler);
-
             }
         }
 
-        public static void SendAll(Message message)
+        public static void SendAll(Message? message)
         {
+            if (message == null)
+                return;
+
             foreach (var handler in _users.Select(u => u.Value.Socket))
                 SendMessage(handler, message);
         }
 
-        private static void SendMessage(Socket handler, Message message) => 
+        private static void SendMessage(Socket handler, Message? message)
+        {
+            if (message == null)
+                return;
+
             handler.Send(EncodeReply(message.ToByteArray()));
+        }
 
         public static void SetDebugMode(bool isDebug) => _isDebug = isDebug;
 
@@ -76,9 +94,10 @@ namespace Server
                         //_clientsHandlers.Enqueue(handler);
 
                         var id = User.GetNewId();
-                        _users.TryAdd(id, new User(handler, id));
+                        var user = new User(handler, id);
+                        _users.TryAdd(id, user);
 
-                        Task.Run(() => ProcessClientRequests(handler));
+                        Task.Run(() => ProcessClientRequests(user));
                     }
                 }
                 catch (Exception ex)
@@ -89,7 +108,7 @@ namespace Server
             });
         }
 
-        private static void ProcessClientRequests(Socket handler)
+        private static void ProcessClientRequests(User client)
         {
             try
             {
@@ -98,13 +117,13 @@ namespace Server
                 while (true)
                 {
                     byte[] requestBin = new byte[1024];
-                    int requestByteCount = handler.Receive(requestBin);
+                    int requestByteCount = client.Socket.Receive(requestBin);
 
                     string request = Encoding.UTF8.GetString(requestBin, 0, requestByteCount);
 
                     if (Regex.IsMatch(request, "^GET", RegexOptions.IgnoreCase))
                     {
-                        HandshakingWithClient(handler, request);
+                        HandshakingWithClient(client.Socket, request);
                         continue;
                     }
 
@@ -112,44 +131,59 @@ namespace Server
                     if (text != string.Empty)
                         Console.WriteLine($"RECIEVED: {text}");
 
-                    switch (text[15])
-                    {
-                        case '0':
-                            int id = _users.Where(u => u.Value.Socket == handler)
-                                .First().Value.UserId;
+                    ProcessMessage(client, text);
 
-                            foreach (var user in _users.Select(u => u.Value))
-                            {
-                                var reply = (ConnectionMessage?)JsonSerializer.Deserialize(text, typeof(ConnectionMessage));
-                                reply.UserID = id;
-                                SendMessage(user.Socket, reply);
-                            }                            
-
-                            break;
-                        
-                        case '1':
-                            foreach (var user in _users.Select(u => u.Value))
-                            {
-                                if (!user.Socket.Equals(handler))
-                                    SendMessage(user.Socket, (DisconnectionMessage?)JsonSerializer.Deserialize(text, typeof(DisconnectionMessage)));
-                                else 
-                                    _users.TryRemove(user.UserId, out var _);
-                            }
-
-                            break;
-                    }
-
-                    if (!IsSocketConnected(handler))
+                    if (!IsSocketConnected(client.Socket))
                         throw new Exception("Client has been disconnected");
                 }
             }
             catch (Exception ex)
             {
                 ShowError(ex);
-                CloseClient(handler);
+                CloseClient(client.Socket);
                 return;
             }
         }
+
+        private static void UpdateCanvas(object param)
+        {
+            var colors = new Color[10][];
+            for (int i = 0; i < 10; i++)
+            {
+                colors[i] = new Color[10];
+                for (int j = 0; j < 10; j++)
+                    colors[i][j] = Color.Bisque;
+            }
+
+            SendAll(new DrawMessage(colors));
+        }
+
+        private static void ProcessMessage(User client, string decodedMessage) =>
+            _processingMethodsTable[decodedMessage[15] - 48].Invoke(client, decodedMessage);
+
+        private static void ProcessConnectionMessage(User client, string decodedMessage)
+        {
+            var reply = (ConnectionMessage?)JsonSerializer.Deserialize(decodedMessage, typeof(ConnectionMessage));
+            reply.UserID = client.UserId;
+
+            foreach (var user in _users.Select(u => u.Value))
+                SendMessage(user.Socket, reply);
+        }
+
+        private static void ProcessDisonnectionMessage(User client, string decodedMessage)
+        {
+            foreach (var user in _users.Select(u => u.Value))
+            {
+                if (user.UserId != client.UserId)
+                    SendMessage(user.Socket, (DisconnectionMessage?)JsonSerializer
+                        .Deserialize(decodedMessage, typeof(DisconnectionMessage)));
+                else
+                    _users.TryRemove(user.UserId, out var _);
+            }
+        }
+
+        private static void ProcessRegularMessage(User client, string decodedMessage) =>
+            SendAll((RegularMessage?)JsonSerializer.Deserialize(decodedMessage, typeof(RegularMessage)));
 
         private static void CloseClient(Socket handler)
         {
@@ -233,9 +267,7 @@ namespace Server
 
         public static string DecodeRequest(byte[] requestBin)
         {
-            //bool fin = (requestBin[0] & 0b10000000) != 0;
             bool mask = (requestBin[1] & 0b10000000) != 0; // must be true, "All messages from the client to the server have this bit set"
-                                                           //int opcode = requestBin[0] & 0b00001111; // expecting 1 - text message
             ulong offset = 2;
             ulong msglen = (ulong)(requestBin[1] & 0b01111111);
 
