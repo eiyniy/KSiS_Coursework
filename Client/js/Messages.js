@@ -48,6 +48,6 @@ const types = {
 
 
 function generateMap(pointX, pointY) {
-    console.log(pointX + " " + pointY + "| ");
+    //console.log(pointX + " " + pointY + "| ");
     template[pointX][pointY] = types.softWall;
 }

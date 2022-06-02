@@ -16,8 +16,6 @@ namespace Server
 
         private static Socket? _sListener;
 
-        //private static ConcurrentQueue<Socket> _clientsHandlers = new ConcurrentQueue<Socket>();
-
         private static ConcurrentDictionary<int, User> _users = new ConcurrentDictionary<int, User>();
 
 
@@ -116,7 +114,7 @@ namespace Server
                     {
                         case '0':
                             int id = _users.Where(u => u.Value.Socket == handler)
-                                .First().Value.UserId;
+                                .First().Value.UserID;
 
                             foreach (var user in _users.Select(u => u.Value))
                             {
@@ -124,15 +122,18 @@ namespace Server
                                 reply.UserID = id;
                                 SendMessage(user.Socket, reply);
 
-                                if (user.UserId == id)
+                                if (user.UserID != id)
+                                    continue;
+
+                                foreach (var block in Map.SoftBlocks)
                                 {
-                                    foreach (var block in Map.SoftBlocks)
-                                    {
-                                        var message = new ModifyBlockMessage(block);
-                                        SendMessage(user.Socket, message);
-                                    }
+                                    var message = new ModifyBlockMessage(block);
+                                    SendMessage(user.Socket, message);
                                 }
                             }
+
+                            var usersList = _users.Select(u => u.Value).ToList();
+                            SendMessage(_users[id].Socket, new NotifyMessage(usersList));
 
                             break;
 
@@ -142,7 +143,7 @@ namespace Server
                                 if (!user.Socket.Equals(handler))
                                     SendMessage(user.Socket, (DisconnectionMessage?)JsonSerializer.Deserialize(text, typeof(DisconnectionMessage)));
                                 else
-                                    _users.TryRemove(user.UserId, out var _);
+                                    _users.TryRemove(user.UserID, out var _);
                             }
 
                             break;

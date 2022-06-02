@@ -54,7 +54,7 @@ wallCtx.fillRect(2, 2, grid - 4, grid - 4);
 const port = 11000;
 const host = 'localhost';
 
-
+let players = new Set();
 
 let username = "Player";
 let userID = -1;
@@ -80,8 +80,14 @@ ws.onmessage = function (event) {
             let cMessage = new ConnectionMessage(messageRaw.Username, messageRaw.UserID);
 
             //  не работает с >1 неинициализированным юзером (или нет) 
-            if (userID == -1)
+            if (userID == -1) {
                 userID = cMessage.UserID;
+                break;
+            }
+
+            players.add(new Player(cMessage.UserID, cMessage.Username, 0, 3));
+
+            console.log(players);
 
             break;
 
@@ -89,6 +95,9 @@ ws.onmessage = function (event) {
             alert("Получены данные " + event.data);
             let dMessage = new DisconnectionMessage(messageRaw.Username, messageRaw.UserID);
 
+            deletePlayerById(messageRaw.UserID);
+            console.log(players);
+            
             break;
 
         case 2:
@@ -97,6 +106,16 @@ ws.onmessage = function (event) {
         case 3:
             generateMap(messageRaw.SoftBlockX, messageRaw.SoftBlockY);
             drawMap();
+
+            break;
+        case 5:
+            alert("Получены данные " + event.data);
+            console.log(messageRaw.Players.length);
+            for (let i = 0; i < messageRaw.Players.length; i++) {
+                players.add(new Player(messageRaw.Players[i].UserID, messageRaw.Players[i].Username, messageRaw.Players[i].PositionX, messageRaw.Players[i].PositionY));
+            }
+            console.log(players);
+            break;
 
         default:
             break;
@@ -148,7 +167,18 @@ function drawMap() {
 }
 
 
+function deletePlayerById(UserID) {
+    players.forEach((player) => {
+        if (player.UserID == UserID) {
+            let bool = players.delete(player);
+            console.log(bool);
+            console.log("Find and delete |");
+            return bool;
+        }
+    });
 
+    return false;
+}
 
 
 

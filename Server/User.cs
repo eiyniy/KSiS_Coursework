@@ -1,43 +1,36 @@
 using System.Net.Sockets;
+using System.Text.Json.Serialization;
 
 namespace Server;
 
 public class User
 {
-    private bool _isInit;
+    private static int _commonId = 0;
 
-    public static int CommonId = 0;
-
-    public int UserId { get; set; }
+    public int UserID { get; set; }
 
     public string Username { get; set; }
 
-    public int[] Position { get; set; }
+    public int PositionX { get; set; }
 
+    public int PositionY { get; set; }
+
+    [JsonIgnore]
     public int BombCount { get; set; } = 1;
 
+    [JsonIgnore]
     public double BombTimer { get; set; }
 
+    [JsonIgnore]
     public Socket Socket { get; set; }
 
 
-    public User(Socket socket, int userId)
+    public User(Socket socket, int userID)
     {
-        UserId = userId;
+        UserID = userID;
         Socket = socket;
-
-        _isInit = false;
-    }
-
-    public User(string username, Socket socket, int userId)
-    {
-        UserId = userId;
-        Username = username;
-        Socket = socket;
-
-        _isInit = true;
     }
 
 
-    public static int GetNewId() => ++CommonId;
+    public static int GetNewId() => ++_commonId;
 }

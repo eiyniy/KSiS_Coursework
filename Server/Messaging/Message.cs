@@ -3,7 +3,7 @@ using System.Text.Json;
 
 namespace Server.Messaging;
 
-public enum MessageTypes { Connect, Disconnect, Move, ModifyBlock, PlaceBomb };
+public enum MessageTypes { Connect, Disconnect, Move, ModifyBlock, PlaceBomb, NotifyMessage };
 
 public abstract class Message
 {
