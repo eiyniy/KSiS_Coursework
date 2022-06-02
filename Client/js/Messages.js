@@ -25,3 +25,29 @@ class DisconnectionMessage {
     }
 }
 
+
+const template = [
+    ['w', 'w', 'w', 'w', 'w', 'w', 'w', 'w', 'w', 'w', 'w', 'w', 'w', 'w', 'w', 'w', 'w', 'w', 'w'],
+    ['w', , , , , , , , , , , , , , , , , , 'w'],
+    ['w', , 'w', , 'w', , 'w', , 'w', , 'w', , 'w', , 'w', , 'w', , 'w'],
+    ['w', , , , , , , , , , , , , , , , , , 'w'],
+    ['w', , 'w', , 'w', , 'w', , 'w', , 'w', , 'w', , 'w', , 'w', , 'w'],
+    ['w', , , , , , , , , , , , , , , , , , 'w'],
+    ['w', , 'w', , 'w', , 'w', , 'w', , 'w', , 'w', , 'w', , 'w', , 'w'],
+    ['w', , , , , , , , , , , , , , , , , , 'w'],
+    ['w', , 'w', , 'w', , 'w', , 'w', , 'w', , 'w', , 'w', , 'w', , 'w'],
+    ['w', , , , , , , , , , , , , , , , , , 'w'], 
+    ['w', 'w', 'w', 'w', 'w', 'w', 'w', 'w', 'w', 'w', 'w', 'w', 'w', 'w', 'w', 'w', 'w', 'w', 'w']
+];
+
+const types = {
+    wall: 'w',
+    softWall: 1,
+    bomb: 2
+};
+
+
+function generateMap(pointX, pointY) {
+    console.log(pointX + " " + pointY + "| ");
+    template[pointX][pointY] = types.softWall;
+}

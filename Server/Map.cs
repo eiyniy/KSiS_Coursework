@@ -36,11 +36,22 @@ public static class Map
                     continue;
                 }
 
-                if (random.Next(1, 100) < 70)
+                if ((row == 1 && col == 1) || (row == 2 && col == 1) || (row == 1 && col == 2) ||
+                    (row == Height - 1 && col == 1) || (row == Height - 2 && col == 1) || (row == Height - 1 && col == 2) ||
+                    (row == 1 && col == Width - 1) || (row == 1 && col == Width - 2) || (row == 2 && col == Width - 1) ||
+                    (row == Height - 1 && col == Width - 1) || (row == Height - 2 && col == Width - 1) || (row == Height - 1 && col == Width - 2))
+                {
+                    MapTemplate[row, col] = CellTypes.Empty;
+                    continue;
+                }
+
+                if (random.Next(1, 100) < 60)
                 {
                     MapTemplate[row, col] = CellTypes.SoftBlock;
                     SoftBlocks.Add(new Point(row, col));
                 }
+
+
             }
         }
     }
