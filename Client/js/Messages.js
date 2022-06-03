@@ -3,12 +3,14 @@ class ConnectionMessage {
     MessageType;
     Username;
     UserID;
+    IsDrawer;
 
 
-    constructor(username, userID) {
+    constructor(username, userID, isDrawer) {
         this.MessageType = 0;
         this.Username = username;
         this.UserID = userID;
+        this.IsDrawer = isDrawer
     }
 }
 
@@ -40,11 +42,11 @@ class RegularMessage {
 
 class DrawMessage {
     MessageType;
-    Colors;
+    Base64;
 
 
-    constructor(colors) {
+    constructor(base64) {
         this.MessageType = 3;
-        this.Colors = colors;
+        this.Base64 = base64;
     }
 }

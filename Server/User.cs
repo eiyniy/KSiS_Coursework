@@ -4,8 +4,6 @@ namespace Server;
 
 public class User
 {
-    private bool _isInit;
-
     private static int _commonId = 0;
     
 
@@ -20,17 +18,6 @@ public class User
     {
         UserId = userId;
         Socket = socket;
-
-        _isInit = false;
-    }
-
-    public User(string username, Socket socket, int userId)
-    {
-        UserId = userId;
-        Username = username;
-        Socket = socket;
-
-        _isInit = true;
     }
 
 

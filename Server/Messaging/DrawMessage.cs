@@ -1,4 +1,3 @@
-using System.Drawing;
 using System.Text;
 using System.Text.Json;
 
@@ -6,13 +5,13 @@ namespace Server.Messaging;
 
 public class DrawMessage : Message
 {
-    public Color[][] _canvas; 
+    public string Base64 { get; set; }
 
 
-    public DrawMessage(Color[][] canvas) 
+    public DrawMessage(string base64)
         : base(MessageTypes.Draw)
     {
-        _canvas = canvas;
+        Base64 = base64;
     }
 
 

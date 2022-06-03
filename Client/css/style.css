@@ -1,16 +1,87 @@
-html, body {
-	/* общие настройки страницы */
-  height: 100%;
-  margin: 0;
-}
-/* настройки внешнего вида страницы и положения элементов */
 body {
-  background: black;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+    background-color: bisque;
+    display: flex;
+    height: 800px;
+    flex-wrap: wrap;
+    flex-direction: column;
+}
+
+.chat {
+    height: 100%;
+    width: 23%;
+    border-radius: 10px 0 0 10px;
+    background-color: rgb(222, 199, 171);
+    padding: 2% 2% 0 1%;
+}
+
+.chat_inner {
+    border-radius: 10px;
+    width: 90%;
+    height: 88%;
+    position: relative;
+    padding: 13px;
+    background-color: rgb(252, 235, 215);
+}
+
+.chat_button {
+    margin: 10px 0 0 0;
+    width: 90%;
+    height: 5%;
+    border-radius: 10px;
+    border: 0px;
+    line-height: 10px;
+    padding: 0 10px 0 20px;
+    background-color: rgb(252, 235, 215);
+    font-size: 16px;
+}
+
+.canvas {
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    /* margin: -10px -10px; */
+    margin-left: -5px;
+    height: 80%;
+    width: 73%;
+    border: 0px;
+    background-color: rgb(222, 199, 171);
+    padding: 10px 10px 10px 0px;
+    border-radius: 0 10px 0 0;
+}
+
+.primary_key {
+    margin: 0 0 1% 30%;
+    font-size: 20px;
+    font-weight: bold;
+    line-height: 7px;
+
+    width: 40%;
+    height: 7%;
+    background-color: rgb(252, 235, 215);
+    border-radius: 10px;
 }
 
 canvas {
-	
+    width: 98%;
+    height: 90%;
+    background-color: rgb(252, 235, 215);
+    border-radius: 10px;
+}
+
+.drawingtools {
+    padding: 10px 0 2px 0;
+    margin: 0 0 0 -9px;
+    height: 16%;
+    width: 74%;
+    border: 0px;
+    border-radius: 0 0 10px 0;
+    background-color: rgb(222, 199, 171);
+}
+
+.drawingtools_inner {
+    padding: 0 0 0 3px;
+    border-radius: 10px;
+    background-color: rgb(252, 235, 215);
+    width: 97%;
+    height: 85%;
 }

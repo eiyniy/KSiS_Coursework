@@ -19,6 +19,7 @@ namespace Server
             {0, ProcessConnectionMessage},
             {1, ProcessDisonnectionMessage},
             {2, ProcessRegularMessage},
+            {3, ProcessDrawMessage},
         };
 
         private static bool _isDebug = false;
@@ -42,10 +43,6 @@ namespace Server
                 _sListener.Listen(10);
 
                 AcceptNewClients(ipEndPoint);
-
-                var callback = new TimerCallback(UpdateCanvas);
-                Timers.Add(callback, null, 0, 10000);
-                Timers.Start();
             }
             catch (Exception ex)
             {
@@ -66,6 +63,15 @@ namespace Server
             foreach (var handler in _users.Select(u => u.Value.Socket))
                 SendMessage(handler, message);
         }
+        
+        public static void SendAll(string jsonMessage)
+        {
+            if (jsonMessage == null)
+                return;
+
+            foreach (var handler in _users.Select(u => u.Value.Socket))
+                SendMessage(handler, jsonMessage);
+        }
 
         private static void SendMessage(Socket handler, Message? message)
         {
@@ -73,6 +79,14 @@ namespace Server
                 return;
 
             handler.Send(EncodeReply(message.ToByteArray()));
+        }
+        
+        private static void SendMessage(Socket handler, string jsonMessage)
+        {
+            if (jsonMessage == null)
+                return;
+
+            handler.Send(EncodeReply(Encoding.UTF8.GetBytes(jsonMessage)));
         }
 
         public static void SetDebugMode(bool isDebug) => _isDebug = isDebug;
@@ -116,7 +130,7 @@ namespace Server
 
                 while (true)
                 {
-                    byte[] requestBin = new byte[1024];
+                    byte[] requestBin = new byte[10240];
                     int requestByteCount = client.Socket.Receive(requestBin);
 
                     string request = Encoding.UTF8.GetString(requestBin, 0, requestByteCount);
@@ -145,19 +159,6 @@ namespace Server
             }
         }
 
-        private static void UpdateCanvas(object param)
-        {
-            var colors = new Color[10][];
-            for (int i = 0; i < 10; i++)
-            {
-                colors[i] = new Color[10];
-                for (int j = 0; j < 10; j++)
-                    colors[i][j] = Color.Bisque;
-            }
-
-            SendAll(new DrawMessage(colors));
-        }
-
         private static void ProcessMessage(User client, string decodedMessage) =>
             _processingMethodsTable[decodedMessage[15] - 48].Invoke(client, decodedMessage);
 
@@ -165,6 +166,9 @@ namespace Server
         {
             var reply = (ConnectionMessage?)JsonSerializer.Deserialize(decodedMessage, typeof(ConnectionMessage));
             reply.UserID = client.UserId;
+
+            if (_users.Count == 1)
+                reply.IsDrawer = true;
 
             foreach (var user in _users.Select(u => u.Value))
                 SendMessage(user.Socket, reply);
@@ -175,15 +179,17 @@ namespace Server
             foreach (var user in _users.Select(u => u.Value))
             {
                 if (user.UserId != client.UserId)
-                    SendMessage(user.Socket, (DisconnectionMessage?)JsonSerializer
-                        .Deserialize(decodedMessage, typeof(DisconnectionMessage)));
+                    SendMessage(user.Socket, decodedMessage);
                 else
                     _users.TryRemove(user.UserId, out var _);
             }
         }
 
         private static void ProcessRegularMessage(User client, string decodedMessage) =>
-            SendAll((RegularMessage?)JsonSerializer.Deserialize(decodedMessage, typeof(RegularMessage)));
+            SendAll(decodedMessage);
+
+        private static void ProcessDrawMessage(User client, string decodedMessage) =>
+            SendAll(decodedMessage);
 
         private static void CloseClient(Socket handler)
         {

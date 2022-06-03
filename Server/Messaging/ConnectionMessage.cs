@@ -5,9 +5,9 @@ namespace Server.Messaging;
 
 public class ConnectionMessage : Message
 {
+    public bool IsDrawer { get; set; }
     public int UserID { get; set; }
     public string Username { get; set; }
-    public DateTime Time { get; set; }
 
 
     public ConnectionMessage(int userID, string username)
@@ -15,8 +15,8 @@ public class ConnectionMessage : Message
     {
         UserID = userID;
         Username = username;
-        Time = DateTime.Now;
     }
+
 
     public override byte[] ToByteArray() => 
         Encoding.UTF8.GetBytes(JsonSerializer.Serialize(this));
