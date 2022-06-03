@@ -13,9 +13,11 @@ class Player {
         this.PositionY = positionY;
     }
 
+
     RenderPlayer() {
-        const x = (this.col + 0.5) * grid;
-        const y = (this.row + 0.5) * grid; 
+        //debugger;
+        const x = (this.PositionX + 0.5) * grid;
+        const y = (this.PositionY + 0.5) * grid; 
 
         context.save();
         context.fillStyle = 'white';

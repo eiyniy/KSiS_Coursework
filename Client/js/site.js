@@ -58,13 +58,12 @@ let players = new Set();
 
 let username = "Player";
 let userID = -1;
-
-
+let currentPlayer;
 
 let ws = new WebSocket("ws://" + host + ':' + port)
 
 ws.onopen = function () {
-    alert("Соединение установлено.");
+    //alert("Соединение установлено.");
 
     ws.send(JSON.stringify(new ConnectionMessage(username, userID)));
 };
@@ -82,10 +81,11 @@ ws.onmessage = function (event) {
             //  не работает с >1 неинициализированным юзером (или нет) 
             if (userID == -1) {
                 userID = cMessage.UserID;
+
                 break;
             }
 
-            players.add(new Player(cMessage.UserID, cMessage.Username, 0, 3));
+            players.add(new Player(cMessage.UserID, cMessage.Username, 1, 1));
 
             console.log(players);
 
@@ -93,27 +93,42 @@ ws.onmessage = function (event) {
 
         case 1:
             alert("Получены данные " + event.data);
-            let dMessage = new DisconnectionMessage(messageRaw.Username, messageRaw.UserID);
+            //let dMessage = new DisconnectionMessage(messageRaw.Username, messageRaw.UserID);
 
             deletePlayerById(messageRaw.UserID);
             console.log(players);
-            
+
             break;
 
         case 2:
+            console.log(messageRaw);
+            players.forEach(player => {
+                if (player.UserID === messageRaw.UserID)
+                {
+                    player.PositionX = messageRaw.PositionX;
+                    player.PositionY = messageRaw.PositionY;
+                }
+            });
+
             break;
 
         case 3:
             generateMap(messageRaw.SoftBlockX, messageRaw.SoftBlockY);
             drawMap();
+           
 
             break;
         case 5:
-            alert("Получены данные " + event.data);
-            console.log(messageRaw.Players.length);
+            //alert("Получены данные " + event.data);
+            //console.log(messageRaw.Players.length);
             for (let i = 0; i < messageRaw.Players.length; i++) {
                 players.add(new Player(messageRaw.Players[i].UserID, messageRaw.Players[i].Username, messageRaw.Players[i].PositionX, messageRaw.Players[i].PositionY));
             }
+
+            searchPlayerById(userID);
+            requestAnimationFrame(gameLoop);
+
+            console.log(currentPlayer);
             console.log(players);
             break;
 
@@ -133,24 +148,6 @@ window.onunload = function () {
 
 
 
-
-function generateLevel() {
-    // на старте пока уровень пустой
-    cells = [];
-
-    // cначала считаем строки
-    for (let row = 0; row < numRows; row++) {
-        cells[row] = [];
-
-        // потом столбцы
-        for (let col = 0; col < numCols; col++) {
-            if (template[row][col] === types.wall) {
-                cells[row][col] = types.wall;
-            }
-        }
-    }
-}
-
 function drawMap() {
     for (let row = 0; row < numRows; row++) {
         for (let col = 0; col < numCols; col++) {
@@ -169,16 +166,70 @@ function drawMap() {
 
 function deletePlayerById(UserID) {
     players.forEach((player) => {
-        if (player.UserID == UserID) {
-            let bool = players.delete(player);
-            console.log(bool);
-            console.log("Find and delete |");
-            return bool;
+        if (player.UserID === UserID) {
+            players.delete(player);
         }
     });
-
-    return false;
 }
+
+function searchPlayerById(UserID) {
+    players.forEach(player => {
+        if (player.UserID === UserID) {
+            currentPlayer = player;
+        }
+
+    });
+}
+
+function gameLoop() {
+    requestAnimationFrame(gameLoop);
+
+    context.clearRect(0, 0, canvas.width, canvas.height);
+
+    drawMap();
+
+    //console.log(currentPlayer);
+    //debugger;
+    players.forEach(player => {
+        player.RenderPlayer();
+    });
+}
+
+document.addEventListener('keydown', function (e) {
+    let col = currentPlayer.PositionX;
+    let row = currentPlayer.PositionY;
+    console.log(e.key + " " + row + " " + col );
+
+    switch (e.key) {
+        case 'w':
+            row--;
+            break;
+
+        case 'a':
+            col--;
+            break;
+
+        case 's':
+            row++;
+            break;
+
+        case 'd':
+            col++;
+            break;
+        case 'Space':
+            console.log("Enter SPACE");
+            break;
+        default:
+            break;
+    }
+    if (!template[row][col]) {
+        currentPlayer.PositionX = col;
+        currentPlayer.PositionY = row;
+
+        //debugger;
+        ws.send(JSON.stringify(new MoveMessage(currentPlayer.Username, currentPlayer.UserID, currentPlayer.PositionX, currentPlayer.PositionY)));
+    }
+});
 
 
 

@@ -25,6 +25,22 @@ class DisconnectionMessage {
     }
 }
 
+class MoveMessage  {
+    MessageType;
+    Username;
+    UserID;
+    PositionX;
+    PositionY;
+
+    constructor(username, userID, positionX, positionY){
+        this.MessageType = 2;
+        this.UserID = userID;
+        this.Username = username;
+        this.PositionX = positionX;
+        this.PositionY = positionY;
+    }
+}
+
 
 const template = [
     ['w', 'w', 'w', 'w', 'w', 'w', 'w', 'w', 'w', 'w', 'w', 'w', 'w', 'w', 'w', 'w', 'w', 'w', 'w'],

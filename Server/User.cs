@@ -11,9 +11,9 @@ public class User
 
     public string Username { get; set; }
 
-    public int PositionX { get; set; }
+    public int PositionX { get; set; } = 1;
 
-    public int PositionY { get; set; }
+    public int PositionY { get; set; } = 1;
 
     [JsonIgnore]
     public int BombCount { get; set; } = 1;

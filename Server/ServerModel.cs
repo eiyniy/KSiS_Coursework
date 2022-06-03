@@ -46,14 +46,11 @@ namespace Server
             }
         }
 
-        public static void SendAll(Message message)
-        {
-            foreach (var handler in _users.Select(u => u.Value.Socket))
-                SendMessage(handler, message);
-        }
-
         private static void SendMessage(Socket handler, Message message) =>
             handler.Send(EncodeReply(message.ToByteArray()));
+
+        private static void SendMessage(Socket handler, string json) =>
+            handler.Send(EncodeReply(Encoding.UTF8.GetBytes(json)));
 
         public static void SetDebugMode(bool isDebug) => _isDebug = isDebug;
 
@@ -141,11 +138,26 @@ namespace Server
                             foreach (var user in _users.Select(u => u.Value))
                             {
                                 if (!user.Socket.Equals(handler))
-                                    SendMessage(user.Socket, (DisconnectionMessage?)JsonSerializer.Deserialize(text, typeof(DisconnectionMessage)));
+                                    SendMessage(user.Socket, text);
                                 else
                                     _users.TryRemove(user.UserID, out var _);
                             }
 
+                            break;
+
+                        case '2':
+                            foreach (var user in _users.Select(u => u.Value))
+                            {
+                                if (user.Socket.Equals(handler))
+                                {
+                                    var message = (MoveMessage?)JsonSerializer.Deserialize(text, typeof(MoveMessage));
+
+                                    user.PositionX = message.PositionX;
+                                    user.PositionY = message.PositionY;
+                                }
+                                else 
+                                    SendMessage(user.Socket, text);
+                            }
                             break;
                     }
 
