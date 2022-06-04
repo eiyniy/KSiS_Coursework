@@ -1,44 +1,70 @@
 
 class ConnectionMessage {
-    MessageType;
+    MessageType = 0;
     Username;
     UserID;
 
 
     constructor(username, userID) {
-        this.MessageType = 0;
         this.Username = username;
         this.UserID = userID;
     }
 }
 
 class DisconnectionMessage {
-    MessageType;
+    MessageType = 1;
     Username;
     UserID;
 
 
     constructor(username, userID) {
-        this.MessageType = 1;
         this.Username = username;
         this.UserID = userID;
     }
 }
 
 class MoveMessage  {
-    MessageType;
+    MessageType = 2;
     Username;
     UserID;
     PositionX;
     PositionY;
 
     constructor(username, userID, positionX, positionY){
-        this.MessageType = 2;
         this.UserID = userID;
         this.Username = username;
         this.PositionX = positionX;
         this.PositionY = positionY;
     }
+}
+
+class ModifyBlockMessage {
+    MessageType = 3;
+    PositionX;
+    PositionY;
+    IsDelete;
+
+    constructor(positionX, positionY, isDelete){
+        this.PositionX = positionX;
+        this.PositionY = positionY;
+        this.IsDelete = isDelete;
+    }
+}
+
+class PlaceBombMessage {
+    MessageType = 4;
+    Username;
+    UserID;
+    PositionX;
+    PositionY;
+
+    constructor(username, userID, positionX, positionY){
+        this.Username = username;
+        this.UserID = userID;
+        this.PositionX = positionX;
+        this.PositionY = positionY;
+    }
+
 }
 
 

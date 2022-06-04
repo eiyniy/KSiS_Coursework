@@ -46,8 +46,9 @@ wallCtx.fillRect(0, 0, grid - 2, grid - 2);
 wallCtx.fillStyle = '#a9a9a9';
 wallCtx.fillRect(2, 2, grid - 4, grid - 4);
 
-
-
+let last;
+let dt;
+let entities = [];
 
 
 // The port number and hostname of the server.
@@ -75,7 +76,7 @@ ws.onmessage = function (event) {
 
     switch (messageRaw.MessageType) {
         case 0:
-            alert("Получены данные " + event.data);
+            console.log(event.data);
             let cMessage = new ConnectionMessage(messageRaw.Username, messageRaw.UserID);
 
             //  не работает с >1 неинициализированным юзером (или нет) 
@@ -92,8 +93,8 @@ ws.onmessage = function (event) {
             break;
 
         case 1:
-            alert("Получены данные " + event.data);
-            //let dMessage = new DisconnectionMessage(messageRaw.Username, messageRaw.UserID);
+            console.log("Получены данные " + event.data);
+
 
             deletePlayerById(messageRaw.UserID);
             console.log(players);
@@ -103,8 +104,7 @@ ws.onmessage = function (event) {
         case 2:
             console.log(messageRaw);
             players.forEach(player => {
-                if (player.UserID === messageRaw.UserID)
-                {
+                if (player.UserID === messageRaw.UserID) {
                     player.PositionX = messageRaw.PositionX;
                     player.PositionY = messageRaw.PositionY;
                 }
@@ -113,11 +113,21 @@ ws.onmessage = function (event) {
             break;
 
         case 3:
-            generateMap(messageRaw.SoftBlockX, messageRaw.SoftBlockY);
+            if (!messageRaw.IsDelete) {
+                generateMap(messageRaw.PositionX, messageRaw.PositionY);
+            }
+            else {
+                template[messageRaw.SoftBlockX][messageRaw.SoftBlockY] = null;
+            }
+
             drawMap();
-           
 
             break;
+
+        case 4:
+
+            break;
+
         case 5:
             //alert("Получены данные " + event.data);
             //console.log(messageRaw.Players.length);
@@ -139,6 +149,7 @@ ws.onmessage = function (event) {
 
 ws.onerror = function (error) {
     alert("Ошибка " + error.message);
+    ws.close();
 };
 
 window.onunload = function () {
@@ -181,24 +192,39 @@ function searchPlayerById(UserID) {
     });
 }
 
-function gameLoop() {
+function gameLoop(timestamp) {
     requestAnimationFrame(gameLoop);
 
     context.clearRect(0, 0, canvas.width, canvas.height);
 
+    if (!last) {
+        last = timestamp;
+    }
+
     drawMap();
 
+    dt = timestamp - last;
+    last = timestamp;
     //console.log(currentPlayer);
     //debugger;
+    entities.forEach(entity => {
+        entity.update(dt);
+        entity.render();
+    })
+
+    entities = entities.filter(entity => entity.alive);
+
     players.forEach(player => {
         player.RenderPlayer();
     });
+
+   
 }
 
 document.addEventListener('keydown', function (e) {
     let col = currentPlayer.PositionX;
     let row = currentPlayer.PositionY;
-    console.log(e.key + " " + row + " " + col );
+    console.log(e.key + " " + row + " " + col);
 
     switch (e.key) {
         case 'w':
@@ -216,8 +242,16 @@ document.addEventListener('keydown', function (e) {
         case 'd':
             col++;
             break;
-        case 'Space':
-            console.log("Enter SPACE");
+        case ' ':
+            if (entities.filter(entity => { return entity.type === types.bomb && entity.owner === currentPlayer}).length < currentPlayer.BombCount)
+            {
+                const bomb = new Bomb(row, col, currentPlayer);
+
+                entities.push(bomb);
+                template[row][col] = types.bomb;
+                console.log("Bomb at (" + row + ";" + col + ")");
+            }
+
             break;
         default:
             break;

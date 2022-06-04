@@ -124,7 +124,7 @@ namespace Server
 
                                 foreach (var block in Map.SoftBlocks)
                                 {
-                                    var message = new ModifyBlockMessage(block);
+                                    var message = new ModifyBlockMessage(block.X, block.Y, false);
                                     SendMessage(user.Socket, message);
                                 }
                             }
@@ -157,6 +157,19 @@ namespace Server
                                 }
                                 else 
                                     SendMessage(user.Socket, text);
+                            }
+                            break;
+                        case '3':
+                            var modMessage = (ModifyBlockMessage?)JsonSerializer.Deserialize(text, typeof(ModifyBlockMessage));
+                            Map.MapTemplate[modMessage.PositionX, modMessage.PositionY] = Map.CellTypes.Empty;
+                            
+                            foreach (var user in _users.Select(u => u.Value))
+                            {
+                                if (user.Socket.Equals(handler))
+                                    continue;
+                                    
+                                SendMessage(user.Socket, text);
+
                             }
                             break;
                     }

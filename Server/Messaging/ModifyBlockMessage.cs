@@ -7,15 +7,16 @@ namespace Server.Messaging;
 [Serializable]
 public class ModifyBlockMessage : Message
 {
-    public int SoftBlockX { get; set; }
+    public int PositionX { get; set; }
 
-    public int SoftBlockY { get; set; }
+    public int PositionY { get; set; }
 
-
-    public ModifyBlockMessage(Point softBlock) : base(MessageTypes.ModifyBlock)
+    public bool IsDelete { get; set; }
+    public ModifyBlockMessage(int posX, int posY, bool isDelete) : base(MessageTypes.ModifyBlock)
     {
-        SoftBlockX = softBlock.X;
-        SoftBlockY = softBlock.Y;
+        PositionX = posX;
+        PositionY = posY;
+        IsDelete = isDelete;
     }
 
 
