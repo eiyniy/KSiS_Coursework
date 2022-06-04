@@ -12,10 +12,12 @@ public class ModifyBlockMessage : Message
     public int PositionY { get; set; }
 
     public bool IsDelete { get; set; }
-    public ModifyBlockMessage(int posX, int posY, bool isDelete) : base(MessageTypes.ModifyBlock)
+
+
+    public ModifyBlockMessage(int positionX, int positionY, bool isDelete) : base(MessageTypes.ModifyBlock)
     {
-        PositionX = posX;
-        PositionY = posY;
+        PositionX = positionX;
+        PositionY = positionY;
         IsDelete = isDelete;
     }
 

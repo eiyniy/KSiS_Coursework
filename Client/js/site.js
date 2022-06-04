@@ -243,7 +243,7 @@ document.addEventListener('keydown', function (e) {
             col++;
             break;
         case ' ':
-            if (entities.filter(entity => { return entity.type === types.bomb && entity.owner === currentPlayer}).length < currentPlayer.BombCount)
+            if (entities.filter(entity => entity.type === types.bomb && entity.owner === currentPlayer).length < currentPlayer.BombCount)
             {
                 const bomb = new Bomb(row, col, currentPlayer);
 
