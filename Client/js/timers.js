@@ -8,12 +8,12 @@ class Timer {
         let oldBase64;
 
         this.DrawTimer = setInterval(() => {
-            console.log("timer tick");
+            //console.log("timer tick");
 
             if (!isDrawer)
                 return;
 
-            console.log("Base64 recalculate");
+            //console.log("Base64 recalculate");
             oldBase64 = base64;
             base64 = canvas.toDataURL().replace(/^data:image\/png;base64,/, "");
 
