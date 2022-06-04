@@ -3,7 +3,6 @@ class Timer {
 
 
     static Start() {
-        let canvas = document.getElementById("canvas");
         let base64;
         let oldBase64;
 
