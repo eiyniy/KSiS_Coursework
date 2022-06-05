@@ -39,7 +39,7 @@ ws.onmessage = function (event) {
             let rMessage = new RegularMessage(messageRaw.UserID, messageRaw.Text);
             console.log("Regular message: " + rMessage);
 
-            let s1 = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) + ' ';
+            let s1 = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) + ' ';
             let s2 = username + ': ';
             let s3 = rMessage.Text + "<br />";
             Output.innerHTML += multyColors(s1, s2, s3);
@@ -49,6 +49,13 @@ ws.onmessage = function (event) {
         case 3:
             let dMessage = new DrawMessage(messageRaw.Base64);
             console.log("Draw message: " + dMessage);
+
+            let img = new Image();
+            img.src = "data:image/png;base64," + dMessage.Base64;
+
+            img.onload = () => {
+                ctx.drawImage(img, 0, 0);
+            }
 
             break;
 

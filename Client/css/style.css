@@ -1,14 +1,14 @@
 body {
     background-color: bisque;
     display: flex;
-    height: 800px;
+    height: 700px;
     flex-wrap: wrap;
     flex-direction: column;
 }
 
 .chat {
     height: 100%;
-    width: 23%;
+    width: 20%;
     border-radius: 10px 0 0 10px;
     background-color: rgb(222, 199, 171);
     padding: 2% 2% 0 1%;
@@ -41,8 +41,6 @@ body {
     flex-direction: column;
     justify-content: flex-end;
     margin-left: -5px;
-    height: 80%;
-    width: 73%;
     border: 0px;
     background-color: rgb(222, 199, 171);
     padding: 10px 10px 10px 0px;
@@ -54,7 +52,6 @@ body {
     font-size: 20px;
     font-weight: bold;
     line-height: 7px;
-
     width: 40%;
     height: 7%;
     background-color: rgb(252, 235, 215);
@@ -62,8 +59,6 @@ body {
 }
 
 canvas {
-    width: 98%;
-    height: 90%;
     background-color: rgb(252, 235, 215);
     border-radius: 10px;
 }
@@ -72,7 +67,6 @@ canvas {
     padding: 10px 0 2px 0;
     margin: 0 0 0 -5px;
     height: 16%;
-    width: 74%;
     border: 0px;
     border-radius: 0 0 10px 0;
     background-color: rgb(222, 199, 171);

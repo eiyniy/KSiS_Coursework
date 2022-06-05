@@ -4,9 +4,10 @@ let ctx = canvas.getContext("2d");
 let mouseX = 0;
 let mouseY = 0;
 
+let color = 'black';
+
 // Стиль линии
-ctx.strokeStyle = 'red';
-ctx.lineWidth = 2;
+ctx.lineWidth = 1;
 let isDrawing = false;
 
 // Обработчики рисования мышкой
@@ -40,4 +41,14 @@ canvas.addEventListener('mouseup', function (event) {
 function setMouseCoordinates(event) {
     mouseX = event.offsetX;
     mouseY = event.offsetY;
+}
+
+let colorInput = document.getElementById("colorInput");
+
+colorInput.addEventListener('input', colorChange);
+colorInput.addEventListener('change', colorChange);
+
+function colorChange(event) {
+    color = colorInput.value;
+    ctx.strokeStyle = color;
 }

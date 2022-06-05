@@ -130,7 +130,7 @@ namespace Server
 
                 while (true)
                 {
-                    byte[] requestBin = new byte[10240];
+                    byte[] requestBin = new byte[100000];
                     int requestByteCount = client.Socket.Receive(requestBin);
 
                     string request = Encoding.UTF8.GetString(requestBin, 0, requestByteCount);
